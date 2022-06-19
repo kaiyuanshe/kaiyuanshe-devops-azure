@@ -36,5 +36,5 @@ jobs:
       id: fa
       with:
         app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
-        package: './output'
+        package: './src/kaiyuanshe-devops/output'
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
