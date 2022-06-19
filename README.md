@@ -1,6 +1,8 @@
 Kaiayuanshe DevOps on Azure
 ======
 
+[![Build and Deploy](https://github.com/kaiyuanshe/kaiyuanshe-devops-azure/actions/workflows/deploy.yml/badge.svg)](https://github.com/kaiyuanshe/kaiyuanshe-devops-azure/actions/workflows/deploy.yml)
+
 # Introduction
 A Functions project to automate Azure Resources management used by kaiyuanshe projects. 
 
