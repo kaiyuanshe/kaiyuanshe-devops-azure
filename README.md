@@ -15,6 +15,7 @@ Included operations:
 
 - Build: Clone the source codes and follow guidance for [Visual Code](https://docs.microsoft.com/en-us/azure/azure-functions/create-first-function-vs-code-csharp?tabs=in-process#run-the-function-locally) or [Visual Studio](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-your-first-function-visual-studio?tabs=in-process#run-the-function-locally) to run locally.
 - Setup Functions on Azure: Follow [Deploy the Bicep File](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-bicep?tabs=CLI%2Cvisual-studio-code#deploy-the-bicep-file) to deploy the `deploy.bicep` file. A frequent met issue is [WorkerConfig for runtime: dotnet-isolated not found](https://github.com/Azure/azure-functions-dotnet-worker/issues/821) after deployed the bicep file. A workaround is to [set the Platform to 64 bit](https://github.com/Azure/azure-functions-dotnet-worker/issues/821#issuecomment-1131210336).
+- Enable AAD auth on Functions: https://docs.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad?toc=%2Fazure%2Fazure-functions%2Ftoc.json
 - Deploy Functions: follow [Build and Deploy using Github Actions](https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-github-actions?tabs=dotnet) to setup Github Actions.
 - More Guidance to develop C# Isolated process Functions: https://docs.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide
 
