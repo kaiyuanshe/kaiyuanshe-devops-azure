@@ -7,7 +7,7 @@ namespace Kaiyuanshe.DevOps
 {
     public static class Function1
     {
-        [Function("HttpFunction")]
+        [Function("health")]
         public static HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequestData req,
     FunctionContext executionContext)
         {
