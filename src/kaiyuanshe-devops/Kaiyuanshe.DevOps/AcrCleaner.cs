@@ -13,7 +13,7 @@ namespace Kaiyuanshe.DevOps
         // 0 30 9 * * *: at 9:30 AM every day
         // 0 0 */2 * * *: once every two hours
         [Function("AcrCleanupTimer")]
-        public static async Task Run([TimerTrigger("0 0 */2 * * *")] TimerInfo timerInfo,
+        public static async Task Run([TimerTrigger("0 30 9 * * *")] TimerInfo timerInfo,
     FunctionContext context)
         {
             var logger = context.GetLogger("AcrCleanupTimer");
