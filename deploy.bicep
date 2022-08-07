@@ -7,6 +7,7 @@ var functionAppName = appName
 var hostingPlanName = appName
 var storageAccountName = '${substring(appName,0,10)}${uniqueString(resourceGroup().id)}' 
 var appInsightsName = appName
+var logAnalyticsWorkspace = '${appName}la'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: storageAccountName
@@ -29,6 +30,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   tags: {
     'hidden-link:/subscriptions/${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Web/sites/${functionAppName}': 'Resource'
   }
+}
+
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' existing = {
+  name: logAnalyticsWorkspace
 }
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-03-01'= {
@@ -75,5 +80,33 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         }
       ]
     }
+  }
+}
+
+resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: appServicePlan.name
+  scope: appServicePlan
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'FunctionAppLogs'
+        enabled: true
+        retentionPolicy: {
+          days: 90
+          enabled: true 
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          days: 90
+          enabled: true
+        }
+      }
+    ]
   }
 }
