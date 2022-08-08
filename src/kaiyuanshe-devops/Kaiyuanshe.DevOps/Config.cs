@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Kaiyuanshe.DevOps
 {
@@ -35,6 +37,22 @@ namespace Kaiyuanshe.DevOps
                 }
 
                 return TimeSpan.FromDays(90);
+            }
+        }
+
+        public static IEnumerable<string> CdnDomains
+        {
+            get
+            {
+                var domains = Environment.GetEnvironmentVariable("CDN_DOMAINS");
+                if (domains != null)
+                {
+                    return domains.Split(',', ';')
+                        .Where(d => !string.IsNullOrWhiteSpace(d))
+                        .Select(d => d.Trim());
+                }
+
+                return new List<string>();
             }
         }
     }
