@@ -40,6 +40,15 @@ namespace Kaiyuanshe.DevOps
             }
         }
 
+        public static Uri CdnKeyVaultBaseUri
+        {
+            get
+            {
+                string uri = Environment.GetEnvironmentVariable("CDN_VAULT_BASEURI");
+                return new Uri(uri);
+            }
+        }
+
         public static IEnumerable<string> CdnDomains
         {
             get
