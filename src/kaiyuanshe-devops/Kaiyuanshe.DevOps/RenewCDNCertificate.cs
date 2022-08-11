@@ -19,6 +19,14 @@ namespace Kaiyuanshe.DevOps
             var logger = context.GetLogger(nameof(RenewCDNCertificate));
             logger.LogInformation($"RenewCDNCertificateTimer starts.");
 
+            if (string.IsNullOrWhiteSpace(Config.CdnSubscriptionId)
+                || string.IsNullOrWhiteSpace(Config.CdnKeyId)
+                || string.IsNullOrWhiteSpace(Config.CdnKeyValue))
+            {
+                logger.LogInformation("Missing configuration. Exit.");
+                return;
+            }
+
             var secretClient = new SecretClient(Config.CdnKeyVaultBaseUri, new DefaultAzureCredential());
 
             foreach (var domain in Config.CdnDomains)

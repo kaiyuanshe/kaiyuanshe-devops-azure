@@ -64,5 +64,29 @@ namespace Kaiyuanshe.DevOps
                 return new List<string>();
             }
         }
+
+        public static string CdnSubscriptionId
+        {
+            get
+            {
+                return Environment.GetEnvironmentVariable("CDN_SUBSCRIPTION_ID");
+            }
+        }
+
+        public static string CdnKeyId
+        {
+            get
+            {
+                return Environment.GetEnvironmentVariable("CDN_KEY_ID");
+            }
+        }
+
+        public static string CdnKeyValue
+        {
+            get
+            {
+                return Environment.GetEnvironmentVariable("CDN_KEY_VALUE");
+            }
+        }
     }
 }
