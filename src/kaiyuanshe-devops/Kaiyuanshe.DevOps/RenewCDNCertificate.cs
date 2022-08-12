@@ -1,9 +1,14 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Kaiyuanshe.DevOps.Cdn;
+using Kaiyuanshe.DevOps.Cdn.Models;
 using Kaiyuanshe.DevOps.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -27,13 +32,32 @@ namespace Kaiyuanshe.DevOps
                 return;
             }
 
+            var cdnClient = new CdnClient(logger, Config.CdnSubscriptionId, Config.CdnKeyId, Config.CdnKeyValue);
             var secretClient = new SecretClient(Config.CdnKeyVaultBaseUri, new DefaultAzureCredential());
+
+            IEnumerable<Endpoint> endpoints;
+            try
+            {
+                endpoints = await cdnClient.ListEndpoints();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"Failed to list CDN endpoints");
+                throw;
+            }
 
             foreach (var domain in Config.CdnDomains)
             {
                 try
                 {
-                    await RenewDomain(domain, secretClient, logger);
+                    var endpoint = endpoints.Where(e => e.Setting.CustomDomain == domain).FirstOrDefault();
+                    if (endpoint == null)
+                    {
+                        logger.LogInformation($"domain {domain} not found on CDN.");
+                        continue;
+                    }
+
+                    await RenewDomain(domain, cdnClient, secretClient, logger);
                 }
                 catch (Exception e)
                 {
@@ -42,7 +66,7 @@ namespace Kaiyuanshe.DevOps
             }
         }
 
-        private static async Task RenewDomain(string domain, SecretClient secretClient, ILogger logger)
+        private static async Task RenewDomain(string domain, CdnClient cdnClient, SecretClient secretClient, ILogger logger)
         {
             logger.LogInformation($"Check domain: {domain}");
 
@@ -52,6 +76,11 @@ namespace Kaiyuanshe.DevOps
             var kvCert = await DownloadCertFromKeyVault(domain, secretClient, logger);
             bool needUpload = inUseCert.Thumbprint.ToUpper() != kvCert.Thumbprint.ToUpper();
             logger.LogInformation($"[{domain}]latest certificate in key vault: {kvCert.Thumbprint}. Need upload: {needUpload}");
+
+            if (needUpload)
+            {
+
+            }
         }
 
         private static async Task<X509Certificate2> DownloadCertFromKeyVault(string domain, SecretClient secretClient, ILogger logger)
