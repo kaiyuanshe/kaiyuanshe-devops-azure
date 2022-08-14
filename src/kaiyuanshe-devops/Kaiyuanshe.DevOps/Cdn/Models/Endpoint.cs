@@ -3,7 +3,7 @@
     public class Endpoint
     {
         public string EndpointID { get; set; }
-        public EndpointSettings Setting { get; set; }
+        public EndpointSettings Settings { get; set; }
         public EndpointStatus Status { get; set; }
     }
 
