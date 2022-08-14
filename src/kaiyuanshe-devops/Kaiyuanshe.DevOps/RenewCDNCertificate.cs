@@ -101,7 +101,7 @@ namespace Kaiyuanshe.DevOps
             logger.LogInformation($"get latest certificate for `{domain}` from keyvault {secretClient.VaultUri}");
             string secretName = domain.Replace(".", "-");
             var secret = await secretClient.GetSecretAsync(secretName);
-            return new X509Certificate2(Convert.FromBase64String(secret.Value.Value));
+            return new X509Certificate2(Convert.FromBase64String(secret.Value.Value), default(string), X509KeyStorageFlags.Exportable);
         }
     }
 }
