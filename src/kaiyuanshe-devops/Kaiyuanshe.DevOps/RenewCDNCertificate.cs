@@ -6,7 +6,6 @@ using Kaiyuanshe.DevOps.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -50,14 +49,14 @@ namespace Kaiyuanshe.DevOps
             {
                 try
                 {
-                    var endpoint = endpoints.Where(e => e.Setting.CustomDomain == domain).FirstOrDefault();
+                    var endpoint = endpoints.Where(e => e.Settings.CustomDomain == domain).FirstOrDefault();
                     if (endpoint == null)
                     {
                         logger.LogInformation($"domain {domain} not found on CDN.");
                         continue;
                     }
 
-                    await RenewDomain(domain, cdnClient, secretClient, logger);
+                    await RenewDomain(domain, endpoint, cdnClient, secretClient, logger);
                 }
                 catch (Exception e)
                 {
@@ -66,7 +65,7 @@ namespace Kaiyuanshe.DevOps
             }
         }
 
-        private static async Task RenewDomain(string domain, CdnClient cdnClient, SecretClient secretClient, ILogger logger)
+        private static async Task RenewDomain(string domain, Endpoint endpoint, CdnClient cdnClient, SecretClient secretClient, ILogger logger)
         {
             logger.LogInformation($"Check domain: {domain}");
 
@@ -77,9 +76,23 @@ namespace Kaiyuanshe.DevOps
             bool needUpload = inUseCert.Thumbprint.ToUpper() != kvCert.Thumbprint.ToUpper();
             logger.LogInformation($"[{domain}]latest certificate in key vault: {kvCert.Thumbprint}. Need upload: {needUpload}");
 
-            if (needUpload)
+            if (!needUpload)
             {
+                return;
+            }
 
+            if (CertificateHelper.Export(kvCert, out string pubCert, out string priKey))
+            {
+                logger.LogInformation($"Prepare to upload certificate for {domain}");
+                var certName = domain.Replace(".", "-") + "-" + DateTime.UtcNow.ToString("yyyyMMddHH");
+                var certResp = await cdnClient.UploadCertificate(certName, pubCert, priKey);
+
+                logger.LogInformation($"Prepare to bind https cert for {domain}, Endpoint: {endpoint.EndpointID}, CertId: {certResp.CertificateId}");
+                await cdnClient.BindHttps(endpoint.EndpointID, certResp.CertificateId);
+            }
+            else
+            {
+                logger.LogInformation($"Failed to export cert: {domain}");
             }
         }
 
