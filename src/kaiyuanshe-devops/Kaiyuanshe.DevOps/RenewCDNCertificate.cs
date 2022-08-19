@@ -15,10 +15,10 @@ namespace Kaiyuanshe.DevOps
 {
     public class RenewCDNCertificate
     {
-        // 0 30 10 * * *: at 10:30 AM every day
+        // 0 30 8 * * *: at 7:30 AM every day
         // 0 0 */4 * * *: once every 4 hours
         [Function("RenewCDNCertificateTimer")]
-        public static async Task Run([TimerTrigger("0 30 */1 * * *")] TimerInfo timerInfo, FunctionContext context)
+        public static async Task Run([TimerTrigger("0 30 7 * * *")] TimerInfo timerInfo, FunctionContext context)
         {
             var logger = context.GetLogger(nameof(RenewCDNCertificate));
             logger.LogInformation($"RenewCDNCertificateTimer starts.");
@@ -67,38 +67,38 @@ namespace Kaiyuanshe.DevOps
 
         private static async Task RenewDomain(string domain, Endpoint endpoint, CdnClient cdnClient, SecretClient secretClient, ILogger logger)
         {
-            logger.LogInformation($"Check domain: {domain}");
+            logger.LogInformation($"[{domain}]Start checking domain.");
 
             var inUseCert = await CertificateHelper.GetServerCertificateAsync($"https://{domain}");
             logger.LogInformation($"[{domain}]in-use certificate: {inUseCert.Thumbprint}");
 
             var kvCert = await DownloadCertFromKeyVault(domain, secretClient, logger);
             bool needUpload = inUseCert.Thumbprint.ToUpper() != kvCert.Thumbprint.ToUpper();
-            logger.LogInformation($"[{domain}]latest certificate in key vault: {kvCert.Thumbprint}. Need upload: {needUpload}");
+            logger.LogInformation($"[{domain}]latest certificate in key vault[{secretClient.VaultUri}]: {kvCert.Thumbprint}. Need upload: {needUpload}");
 
             if (!needUpload)
             {
+                logger.LogInformation($"[{domain}]the lastest certificate is already in use. Skipping.");
                 return;
             }
 
             if (CertificateHelper.Export(kvCert, logger, out string pubCert, out string priKey))
             {
-                logger.LogInformation($"Prepare to upload certificate for {domain}");
+                logger.LogInformation($"[{domain}]Prepare to upload certificate");
                 var certName = domain.Replace(".", "-") + "-" + DateTime.UtcNow.ToString("yyyyMMddHH");
                 var certResp = await cdnClient.UploadCertificate(certName, pubCert, priKey);
 
-                logger.LogInformation($"Prepare to bind https cert for {domain}, Endpoint: {endpoint.EndpointID}, CertId: {certResp.CertificateId}");
+                logger.LogInformation($"[{domain}]Prepare to bind https cert, Endpoint: {endpoint.EndpointID}, CertId: {certResp.CertificateId}");
                 await cdnClient.BindHttps(endpoint.EndpointID, certResp.CertificateId);
             }
             else
             {
-                logger.LogInformation($"Failed to export cert: {domain}");
+                logger.LogInformation($"[{domain}]Failed to generate PEM for cert/privateKey.");
             }
         }
 
         private static async Task<X509Certificate2> DownloadCertFromKeyVault(string domain, SecretClient secretClient, ILogger logger)
         {
-            logger.LogInformation($"get latest certificate for `{domain}` from keyvault {secretClient.VaultUri}");
             string secretName = domain.Replace(".", "-");
             var secret = await secretClient.GetSecretAsync(secretName);
             if (secret.Value.Properties.ContentType != "application/x-pkcs12")
