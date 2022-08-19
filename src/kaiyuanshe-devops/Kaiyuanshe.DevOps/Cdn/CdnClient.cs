@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Kaiyuanshe.DevOps.Cdn
@@ -85,17 +85,18 @@ namespace Kaiyuanshe.DevOps.Cdn
             return resp;
         }
 
-        private async Task<string> Post<T>(string url, T data)
+        private async Task<string> Post(string url, object data)
         {
             string date = DateTime.UtcNow.ToString(DateFormat);
             string auth = AuthHelper.CalculateAuthorizationHeader(url, date, KeyId, KeyValue, "POST");
 
-            using HttpClient http = new HttpClient();
-            http.DefaultRequestHeaders.Add(DateHeader, date);
-            http.DefaultRequestHeaders.Add(HttpRequestHeader.Authorization.ToString(), auth);
-            http.DefaultRequestHeaders.Add(HttpRequestHeader.ContentType.ToString(), "application/json");
+            var req = new HttpRequestMessage(HttpMethod.Post, url);
+            req.Headers.Add(DateHeader, date);
+            req.Headers.Add("Authorization", auth);
+            req.Content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
 
-            var resp = await http.PostAsJsonAsync(url, data);
+            using HttpClient http = new HttpClient();
+            var resp = await http.SendAsync(req);
             var respContent = await resp.Content.ReadAsStringAsync();
             logger.LogInformation(respContent);
 

@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -25,22 +26,24 @@ namespace Kaiyuanshe.DevOps.Utils
             return certificate;
         }
 
-        internal static bool Export(this X509Certificate2 certificate, out string publicCert, out string privateKey)
+        internal static bool Export(this X509Certificate2 certificate, ILogger logger, out string publicCert, out string privateKey)
         {
-            publicCert = null;
-            privateKey = null;
+            //publicCert = null;
+            //privateKey = null;
 
             byte[] certificateBytes = certificate.RawData;
-            X509Chain chain = new X509Chain();
-            bool build = chain.Build(certificate);
-            if (!build || chain.ChainElements.Count <= 1)
-            {
-                return false;
-            }
-            X509Certificate2 issuer = chain.ChainElements[1].Certificate;
+            //X509Chain chain = new X509Chain();
+            //bool build = chain.Build(certificate);
+            //if (!build || chain.ChainElements.Count <= 1)
+            //{
+            //    logger.LogInformation($"Failed to build certificate chain: {chain.ChainStatus[0].StatusInformation} ");
+            //    return false;
+            //}
+            //X509Certificate2 issuer = chain.ChainElements[1].Certificate;
             char[] leafPem = PemEncoding.Write("CERTIFICATE", certificateBytes);
-            char[] issuerPem = PemEncoding.Write("CERTIFICATE", issuer.RawData);
-            publicCert = new string(leafPem) + "\n" + new string(issuerPem);
+            //char[] issuerPem = PemEncoding.Write("CERTIFICATE", issuer.RawData);
+            //publicCert = new string(leafPem) + "\n" + new string(issuerPem);
+            publicCert = new string(leafPem);
 
             RSA key = certificate.GetRSAPrivateKey();
             byte[] privKeyBytes = key.ExportPkcs8PrivateKey();
