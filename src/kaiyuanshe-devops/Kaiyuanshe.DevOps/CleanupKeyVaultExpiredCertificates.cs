@@ -22,6 +22,12 @@ namespace Kaiyuanshe.DevOps
             var certs = certClient.GetPropertiesOfCertificatesAsync();
             await certs.ForEach(async (prop) =>
             {
+                if (prop.Tags != null && prop.Tags.ContainsKey("Issuer") && prop.Tags["Issuer"] == "Acmebot")
+                {
+                    logger.LogInformation($"Certificate {prop.Name} is managed by Acembot, skipped.");
+                    return;
+                }
+
                 if (!prop.ExpiresOn.HasValue || prop.ExpiresOn > DateTimeOffset.UtcNow)
                 {
                     logger.LogInformation($"Certificate {prop.Name} is not expired, skipped.");
