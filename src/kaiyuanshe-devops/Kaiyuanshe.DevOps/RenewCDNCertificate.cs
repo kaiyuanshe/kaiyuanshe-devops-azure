@@ -18,7 +18,7 @@ namespace Kaiyuanshe.DevOps
         // 0 30 10 * * *: at 10:30 AM every day
         // 0 0 */4 * * *: once every 4 hours
         [Function("RenewCDNCertificateTimer")]
-        public static async Task Run([TimerTrigger("0 0 */4 * * *")] TimerInfo timerInfo, FunctionContext context)
+        public static async Task Run([TimerTrigger("0 30 */1 * * *")] TimerInfo timerInfo, FunctionContext context)
         {
             var logger = context.GetLogger(nameof(RenewCDNCertificate));
             logger.LogInformation($"RenewCDNCertificateTimer starts.");
@@ -81,7 +81,7 @@ namespace Kaiyuanshe.DevOps
                 return;
             }
 
-            if (CertificateHelper.Export(kvCert, out string pubCert, out string priKey))
+            if (CertificateHelper.Export(kvCert, logger, out string pubCert, out string priKey))
             {
                 logger.LogInformation($"Prepare to upload certificate for {domain}");
                 var certName = domain.Replace(".", "-") + "-" + DateTime.UtcNow.ToString("yyyyMMddHH");
@@ -101,6 +101,11 @@ namespace Kaiyuanshe.DevOps
             logger.LogInformation($"get latest certificate for `{domain}` from keyvault {secretClient.VaultUri}");
             string secretName = domain.Replace(".", "-");
             var secret = await secretClient.GetSecretAsync(secretName);
+            if (secret.Value.Properties.ContentType != "application/x-pkcs12")
+            {
+                throw new ArgumentOutOfRangeException($"cannot handle certificate of type: {secret.Value.Properties.ContentType}. Only application/x-pkcs12 is supported.");
+            }
+
             return new X509Certificate2(Convert.FromBase64String(secret.Value.Value), default(string), X509KeyStorageFlags.Exportable);
         }
     }
